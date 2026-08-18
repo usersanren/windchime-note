@@ -11,7 +11,9 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "rebuild:debug": "powershell -ExecutionPolicy Bypass -File scripts/rebuild-debug.ps1",
+    "build:release": "powershell -ExecutionPolicy Bypass -File scripts/build-release.ps1"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.1.1",

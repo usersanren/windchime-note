@@ -106,10 +106,8 @@ pub fn spawn<R: Runtime>(window: WebviewWindow<R>, state: Arc<PassthroughState>)
         let lx = (cx - origin.x) as f64 / scale;
         let ly = (cy - origin.y) as f64 / scale;
 
-        let inside = lx >= rect.x
-            && lx <= rect.x + rect.width
-            && ly >= rect.y
-            && ly <= rect.y + rect.height;
+        let inside =
+            lx >= rect.x && lx <= rect.x + rect.width && ly >= rect.y && ly <= rect.y + rect.height;
         // 锁定分支已在上方短路，此处只需按交互矩形判断
         let should_ignore = !inside;
 

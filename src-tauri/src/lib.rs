@@ -39,7 +39,11 @@ pub fn run() {
                     }
                     if let Some(window) = app.get_webview_window(MAIN_WINDOW) {
                         let visible = window.is_visible().unwrap_or(false);
-                        let _ = if visible { window.hide() } else { window.show() };
+                        let _ = if visible {
+                            window.hide()
+                        } else {
+                            window.show()
+                        };
                     }
                 })
                 .build(),

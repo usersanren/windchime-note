@@ -72,9 +72,12 @@ pub fn apply_locked<R: Runtime>(app: &AppHandle<R>, locked: bool) -> Result<(), 
     state.set_locked(locked);
     sync_lock_menu(app, locked);
     if let Some(window) = app.get_webview_window(MAIN_WINDOW) {
-        window.set_ignore_cursor_events(locked).map_err(|e| e.to_string())?;
+        window
+            .set_ignore_cursor_events(locked)
+            .map_err(|e| e.to_string())?;
     }
-    app.emit("locked-changed", locked).map_err(|e| e.to_string())?;
+    app.emit("locked-changed", locked)
+        .map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -82,5 +85,9 @@ pub fn apply_locked<R: Runtime>(app: &AppHandle<R>, locked: bool) -> Result<(), 
 pub fn sync_lock_menu<R: Runtime>(app: &AppHandle<R>, locked: bool) {
     let lock_item = app.state::<LockMenuItem<R>>();
     let _ = lock_item.0.set_checked(locked);
-    let _ = lock_item.0.set_text(if locked { "解除锁定" } else { "锁定到桌面" });
+    let _ = lock_item.0.set_text(if locked {
+        "解除锁定"
+    } else {
+        "锁定到桌面"
+    });
 }

@@ -83,7 +83,9 @@ pub async fn generate_ai_quote(
 
         let base = match status {
             401 | 403 => "API Key 无效或未授权，请检查填写的 Key".to_string(),
-            404 => "接口地址错误，请检查 endpoint（OpenAI 兼容的 /chat/completions 地址）".to_string(),
+            404 => {
+                "接口地址错误，请检查 endpoint（OpenAI 兼容的 /chat/completions 地址）".to_string()
+            }
             400 => "请求参数有误（常见原因：模型名不存在），请检查 model".to_string(),
             429 => "请求过于频繁（限流），请稍后再试".to_string(),
             500..=599 => "AI 服务端暂时不可用，请稍后再试".to_string(),
@@ -97,9 +99,16 @@ pub async fn generate_ai_quote(
     }
 
     // 先拿原始文本，便于解析失败时把响应原文带进错误提示（定位格式问题）
-    let body_text = resp.text().await.map_err(|e| format!("读取响应失败: {e}"))?;
-    let data: serde_json::Value = serde_json::from_str(&body_text)
-        .map_err(|e| format!("响应不是 JSON: {e}（原始响应前 300 字符：{}）", body_text.chars().take(300).collect::<String>()))?;
+    let body_text = resp
+        .text()
+        .await
+        .map_err(|e| format!("读取响应失败: {e}"))?;
+    let data: serde_json::Value = serde_json::from_str(&body_text).map_err(|e| {
+        format!(
+            "响应不是 JSON: {e}（原始响应前 300 字符：{}）",
+            body_text.chars().take(300).collect::<String>()
+        )
+    })?;
 
     // 内容提取（兼容多种响应形态）：
     // 1) content 为字符串
@@ -127,7 +136,10 @@ pub async fn generate_ai_quote(
             .to_string();
     }
     if content.trim().is_empty() {
-        content = data["choices"][0]["text"].as_str().unwrap_or_default().to_string();
+        content = data["choices"][0]["text"]
+            .as_str()
+            .unwrap_or_default()
+            .to_string();
     }
     let content = content.trim().to_string();
     if content.is_empty() {

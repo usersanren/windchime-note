@@ -111,10 +111,10 @@ pub fn spawn<R: Runtime>(window: WebviewWindow<R>, state: Arc<PassthroughState>)
         // 锁定分支已在上方短路，此处只需按交互矩形判断
         let should_ignore = !inside;
 
-        if state.ignoring.load(Ordering::Relaxed) != should_ignore {
-            if window.set_ignore_cursor_events(should_ignore).is_ok() {
-                state.ignoring.store(should_ignore, Ordering::Relaxed);
-            }
+        if state.ignoring.load(Ordering::Relaxed) != should_ignore
+            && window.set_ignore_cursor_events(should_ignore).is_ok()
+        {
+            state.ignoring.store(should_ignore, Ordering::Relaxed);
         }
     });
 }

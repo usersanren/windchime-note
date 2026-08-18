@@ -1,6 +1,6 @@
 # 风铃便签（desktop-note-widget）开发摘要
 
-> 供二次开发参考。最后更新：2026-08-11 17:55
+> 供二次开发参考。最后更新：2026-08-18（含 8-12 ~ 8-18 全部迭代）
 
 ## 一、项目概览
 
@@ -10,7 +10,7 @@
 | 定位 | Windows 悬挂式桌面便签小组件：绳子从屏幕顶部垂下一张手绘风便签，展示励志短句 |
 | 路径 | `D:\code\WorkBuddyworkspace\260809\desktop-note-widget` |
 | 技术栈 | Tauri v2 + React 18 + TypeScript(strict) + Tailwind 3 + Zustand 5 + Framer Motion 11 + Rust |
-| 版本 | 1.0.0（MSI 2.9M / NSIS 2.1M / exe 5.3M） |
+| 版本 | 1.1.0（已建 Git 仓库，tag: v1.0.0 / v1.1.0） |
 | 窗口 | 520×520 透明窗口，可水平拖拽定位、跳过任务栏、鼠标穿透 |
 
 **核心交互**：悬挂式便签 + 物理阻尼摆动（点击/拖动/悬停/微风都会晃，可切换经典关键帧模式）+ 四主题 + 每日短句 + AI 在线生成（风格可自定义）+ 收起为小圆点 + 右键菜单 + 锁定到桌面（贴纸模式）。
@@ -113,6 +113,36 @@ desktop-note-widget/
 | 15:20-16:55 | **AI 兼容性攻坚（agnet 平台）**：endpoint 自动补全 `/chat/completions` → 状态码中文诊断 → max_tokens 300→2048 → 去 stop 序列（agnet 会首个 token 截断）→ temperature 1.5 → 风格自定义（默认词库风）→ 防重复（随机句式池+历史反例+撞车重试） |
 | 17:30-17:42 | **Release 打包**：safe-delete 拦截 vite 清 dist → vite 配 `emptyOutDir:false` + PowerShell 强删 dist → 打包成功（8m6s） |
 
+### 2026-08-12
+| 时间 | 事项 |
+|---|---|
+| 上午 | **日期 bug 根治**：新建 `lib/date.ts`（localDateString/localMonthDay 本地时区唯一来源）；修 DailyStamp `useMemo([])` 空依赖 + UTC/本地混用（GMT+8 凌晨差一天） |
+| 上午 | **第二轮代码审核**（产出 OPTIMIZATION_REVIEW_2026-08-12.md）：新发现 2 个 P0 拖拽缺陷（DPI 单位混用 / 副屏负坐标） |
+| 上午-下午 | **P0 拖拽修复**：`useDragPosition` 位移除以 scaleFactor；position.x 哨兵 -1→null（副屏负坐标可保存恢复）；按所在显示器钳制 |
+| 下午 | **体验小包**：AI 按钮 loading 禁用 + 摆动模式切换角度重置 |
+| 下午 | **工程包**：tray.rs 抽 `apply_locked` 统一入口（P1-3/P2-4 锁定收敛）；删 QuoteMode 死类型；passthrough.rs 锁定分支短路（P2-2） |
+| 15:08 | **AI 句库**：每日更新走 AI 现写入库（上限 366 条，失败回退预置池，次日重试）；同日一致性 + 启动占位替换 |
+| 15:08 | **Release 打包成功**（6m44s） |
+
+### 2026-08-13
+| 时间 | 事项 |
+|---|---|
+| 凌晨 | **印章刷新机制升级**：60s 轮询 → 事件驱动（lastUpdateDate / window focus / visibilitychange / 10min 兜底） |
+
+### 2026-08-15
+| 时间 | 事项 |
+|---|---|
+| 14:11 | **包 A（遗留修复）**：mergeConfig 字段类型校验（persistence.ts）+ AI「测试连接」按钮（quoteService.testAiConnection + AiSettingsSection） |
+| 14:21 | **用户问题修复**：换句后印章不刷新（refresh/refreshByAi markDate 全改 true + DailyStamp 订阅换句信号）；锁定 CPU 4%（usePhysicsSwing 加 enabled 停 rAF + passthrough.rs 锁定降频 1s + 前端穿透上报跳过） |
+| 15:00 | **锁定微风恢复**：锁定不再停摆（enabled=!collapsed），保留 3.2s 微风轻晃；hovered 锁定时强制 false |
+
+### 2026-08-16 ~ 08-18
+| 时间 | 事项 |
+|---|---|
+| 8-16 | **印章硬机制 quoteVersion**：store 加 `quoteVersion` 计数器（每次换句 +1），DailyStamp 订阅强制重读 Date()，绕开"日期巧合不变导致 effect 不跑"的边缘 case |
+| 8-16 | **兜底拉长 60 分钟**：验证"换句触发刷新"需排除兜底干扰 |
+| 8-18 | **工程基建**：新建 Git 仓库（tag v1.0.0/v1.1.0）+ 版本号 1.1.0 + 打包脚本（scripts/rebuild-debug.ps1 / build-release.ps1）+ 本文档同步 |
+
 ## 五、关键技术决策（二次开发必读）
 
 1. **摆动引擎分层**：`usePhysicsSwing` 输出 `{state, pluck(strength), rotateMV, variants}`。
@@ -136,6 +166,17 @@ desktop-note-widget/
 9. **布局常量集中在 `HangingWidget.tsx` 顶部**：ROPE_HEIGHT/CARD_BOTTOM/TEAR_TOP(278)/BUTTON_TOP(314) 带推导注释；改布局只改一处。Rope 实际总高用 `ropeTotalHeight()`（绳+结-重叠）
 10. **配置隔离**：tauri.conf.json 不配 `resources`，用户配置天然落在 `%APPDATA%`，安装包不携带用户数据
 11. **本机打包坑**：`genie-safe-delete` shim 会拦截 vite 清空 dist 的删除（trash 失败即报错）→ vite 已配 `emptyOutDir:false`，打包前用 **PowerShell** `Remove-Item -Recurse -Force` 删 dist（bash `rm` 也会被 shim 拦）
+12. **★★★★ Tauri v2 debug 构建默认走 devUrl，不嵌入资源 ★★★★**
+    - 直接 `cargo build` 的 debug exe（`desktop-note-widget.exe`）加载 `devUrl`(http://localhost:1420)，**必须 vite 在跑**，否则白屏 ERR_CONNECTION_REFUSED
+    - 嵌入资源版（独立运行，无需 npm）：`npm run tauri:build -- --debug` 或 `cargo tauri build --debug`
+    - 验证前端最快路径：`npm run dev`（vite :1420）一边挂着，一边跑 debug exe
+    - `cargo build` 增量 1 秒完成 = 没重新嵌入 dist 资源；要强制嵌入需 touch `src-tauri/build.rs` 或 `cargo clean -p desktop-note-widget`
+13. **印章（DailyStamp）刷新机制**：事件驱动，依赖 `[lastUpdateDate, currentQuoteId, currentQuoteText, currentQuoteSource, quoteVersion]` + focus/visibility + 60min 兜底
+    - **quoteVersion 硬机制**：store 里每次 `applyQuote` 递增，印章无条件重读 `Date()`，绕开"日期巧合不变→effect 不跑"的边缘 case（8-16 踩坑）
+    - **手动改系统时间 JS 感知不到**：必须触发事件（换句/focus/兜底）才刷新
+    - 手动换句 markDate 必须为 true（8-15 修复：原来 false 导致印章不更新）
+14. **锁定 CPU 优化**：`usePhysicsSwing` 的 `enabled=!collapsed`（仅收起停 rAF）；锁定时保留 3.2s 微风（用户要求不死板），hovered 强制 false；Rust 穿透轮询锁定降频 1s（`POLL_INTERVAL_LOCKED`）；剩余 ~5% CPU 是 WebView2/DWM 引擎地板，逻辑层压不动
+15. **mergeConfig 字段级类型校验**（persistence.ts）：asNum/asBool/asStr/asTheme/asScale/asSwing/asStrings 守卫，配置手改坏自动回退默认（8-15 包 A）
 
 ## 六、二次开发指南
 
@@ -147,6 +188,7 @@ npm run dev                      # vite :1420（前端改动实时生效）
 D:\cargo-build-target\desktop-note-widget\debug\desktop-note-widget.exe
 ```
 > 360 信任区已配置，正常编译用 `npm run tauri:dev` / `cargo build` 即可；若锁文件报错走上面直跑方案。
+> ⚠️ **debug exe 独立运行**（无需 vite）：用脚本 `npm run rebuild:debug`（tauri build --debug 嵌入资源，约 8 分钟）
 
 ### 打包
 ```bash
@@ -162,6 +204,10 @@ npm run tauri:build
 ```
 产物：`D:\cargo-build-target\desktop-note-widget\release\bundle\{msi,nsis}\`（release 全量编译约 8 分钟）
 
+> **快捷方式（8-18 新增脚本）**：
+> - `npm run build:release` → 打 release 安装包（自动删 dist + 环境变量 + tauri build）
+> - `npm run rebuild:debug` → 更新独立运行 debug exe（tauri build --debug 嵌入资源）
+
 ### 常用改点速查
 | 想改什么 | 改哪里 |
 |---|---|
@@ -176,6 +222,9 @@ npm run tauri:build
 | AI prompt/风格 | `quoteService.ts` AI_PROMPT / buildAiPrompt / RANDOM_STRUCTURES |
 | 托盘菜单 | `src-tauri/src/tray.rs` |
 | 新 IPC 命令 | `commands.rs` + `lib.rs` 注册 + 前端 `lib/tauri.ts` |
+| 印章刷新 | `DailyStamp.tsx`（依赖 lastUpdateDate/换句信号/quoteVersion/focus/60min 兜底）+ store.quoteVersion |
+| 锁定 CPU/微风 | `usePhysicsSwing.ts` enabled 参数 + `HangingWidget.tsx` 传参 + `passthrough.rs` 锁定降频 |
+| 配置类型校验 | `persistence.ts` mergeConfig（asNum/asBool/...守卫） |
 
 ### 环境要点（本机）
 - Rust 1.97.1（rustup + rsproxy.cn 镜像，`~/.cargo/config.toml`）
@@ -184,6 +233,7 @@ npm run tauri:build
 - bash 里 cargo/link 不在 PATH，需导出（见 08-09 日志）
 - `npm install` 首跑可能 bin-links 失败，重跑一次即可
 - Playwright 验证用 `channel: 'msedge'`（本机 ms-playwright 版本不匹配，别下浏览器）
+- Git 仓库已建（main 分支，tag v1.0.0/v1.1.0）；改动后用简短英文 commit，不自动 push
 
 ## 七、已知限制 / 待办
 
@@ -195,10 +245,15 @@ npm run tauri:build
 - [x] ~~AI 生成失败无重试~~ — ✅ 自动重试 1 次 + 状态码中文诊断 + Toast 重试按钮
 - [x] ~~多显示器位置记忆~~ — ✅ 按保存位置所在显示器恢复并钳制
 - [x] ~~AI 平台兼容~~ — ✅ endpoint 归一化 / 去 stop / max_tokens 2048 / 风格自定义 / 防重复
+- [x] ~~换句后印章不刷新~~ — ✅ markDate 全改 true + DailyStamp 订阅换句信号 + quoteVersion 硬机制（8-15/8-16）
+- [x] ~~锁定 CPU 高~~ — ✅ 锁定保留微风但停 hover 摆幅 + 穿透轮询降频（8-15）；剩余 ~5% 为 WebView2/DWM 引擎地板
+- [x] ~~无版本控制~~ — ✅ 已建 Git 仓库（main，tag v1.0.0/v1.1.0）+ 打包脚本（8-18）
 - [ ] desktop.rs（桌面嵌入）已归档 `src-tauri/archive/`，勿重新挂载（黑底无解）
+- [ ] 包 B：AI endpoint 校验（scheme http/https，commands.rs + normalizeEndpoint 双侧）
+- [ ] 包 C：AI Key 加密存储（Windows Credential Manager，keyring crate，2-4h）
 - [ ] 自动更新（需更新服务器 + 签名）
 - [ ] 多语言 i18n（当前无需求）
-- [ ] 每日新句角标（DailyStamp 已覆盖日期，收益低）
+- [ ] 印章 todayStamp 同步渲染（消除"句子先变、印章后变"的异步感知，0.5h）
 - [ ] 性能日志开关（仅调参期有用）
 
 > **打包注意**：vite 已配 `emptyOutDir:false`；打包前仍须用 PowerShell `Remove-Item -Recurse -Force` 删 dist（bash rm / safe-delete trash 均会被拦截）。产物路径在 `D:\cargo-build-target\...`（CARGO_TARGET_DIR 重定向），不在 src-tauri/target 下。

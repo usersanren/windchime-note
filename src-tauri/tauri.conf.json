@@ -2,7 +2,7 @@
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "WindChimeNote",
   "mainBinaryName": "WindChimeNote",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "identifier": "com.windchime.notewidget",
   "build": {
     "beforeDevCommand": "npm run dev",

@@ -1,6 +1,6 @@
 [package]
 name = "desktop-note-widget"
-version = "1.0.0"
+version = "1.1.0"
 description = "Wind Chime Note - a hanging desktop quote widget"
 authors = ["desktop-note-widget"]
 edition = "2021"

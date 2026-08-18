@@ -1,0 +1,127 @@
+/* 便签纸纹理与手绘质感 */
+
+.paper-texture {
+  background-color: var(--paper-color, #fdf6e3);
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+  background-blend-mode: multiply;
+}
+
+/* 手绘不规则边框 + 阴影 */
+.note-card {
+  position: relative;
+  border-radius: 2px 8px 4px 12px;
+  box-shadow: 2px 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--paper-border, rgba(139, 111, 71, 0.15));
+  overflow: hidden;
+  will-change: transform;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.note-card:hover {
+  box-shadow: 3px 8px 20px rgba(0, 0, 0, 0.14);
+}
+
+/* 右下角卷角 */
+.note-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, transparent 50%, var(--paper-fold, #f0e6d2) 50%);
+  box-shadow: -2px -2px 4px rgba(0, 0, 0, 0.05);
+  pointer-events: none;
+}
+
+/* 纸面横向纤维感（极淡） */
+.note-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    0deg,
+    rgba(139, 111, 71, 0.035) 0px,
+    rgba(139, 111, 71, 0.035) 1px,
+    transparent 1px,
+    transparent 6px
+  );
+  pointer-events: none;
+}
+
+/* 顶部穿绳孔洞 */
+.note-hole {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: rgba(60, 44, 28, 0.55);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.65),
+    0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* 麻绳纹理 */
+.rope {
+  width: 4px;
+  background: repeating-linear-gradient(0deg, #8b6f47 0px, #a0826d 2px, #8b6f47 4px);
+  border-radius: 2px;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.25);
+  will-change: transform;
+}
+
+/* 绳结：小球 + 交叉线 */
+.rope-knot {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 35% 30%, #a0826d 0%, #8b6f47 60%, #6f573a 100%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.rope-knot::before,
+.rope-knot::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 1.5px;
+  background: rgba(90, 70, 45, 0.8);
+  transform-origin: center;
+}
+
+.rope-knot::before {
+  transform: translate(-50%, -50%) rotate(32deg);
+}
+
+.rope-knot::after {
+  transform: translate(-50%, -50%) rotate(-32deg);
+}
+
+/* 日期印章 */
+.daily-stamp {
+  width: 48px;
+  height: 48px;
+  border-radius: 9999px;
+  border: 1.5px solid #c0392b;
+  color: #c0392b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.82;
+  transform: rotate(-11deg);
+  box-shadow: inset 0 0 0 1px rgba(192, 57, 43, 0.35);
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+
+.stamp-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0;
+}

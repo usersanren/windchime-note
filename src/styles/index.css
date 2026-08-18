@@ -1,0 +1,54 @@
+@import './paper-texture.css';
+@import './animations.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 透明窗口：所有背景必须完全透明，否则会出现黑底 */
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: transparent !important;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  font-family:
+    'Zhi Mang Xing', 'STXingkai', '华文行楷', 'KaiTi', '楷体', 'STKaiti', 'SimSun', cursive;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 默认整页穿透，只有标记为可交互的元素接收鼠标事件 */
+#root {
+  pointer-events: none;
+}
+
+.interactive {
+  pointer-events: auto;
+}
+
+/* 细滚动条（设置面板内） */
+.thin-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(139, 111, 71, 0.35);
+  border-radius: 4px;
+}
+
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+input[type='range'] {
+  accent-color: #8b6f47;
+}

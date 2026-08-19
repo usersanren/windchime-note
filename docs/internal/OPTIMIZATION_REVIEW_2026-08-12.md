@@ -103,4 +103,4 @@
 
 ---
 
-*审核基于逐文件阅读；未运行编译（360 拦截，编译命令见 DEVELOPMENT_SUMMARY.md）。*
+*审核基于逐文件阅读；未运行编译（本机安全软件拦截，编译命令见 DEVELOPMENT_SUMMARY.md）。*

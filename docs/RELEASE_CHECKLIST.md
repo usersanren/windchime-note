@@ -12,7 +12,7 @@
 | `src-tauri/Cargo.toml` + `Cargo.lock` | `version = "X.Y.Z"` |
 
 ```powershell
-cd D:\code\WorkBuddyworkspace\260809\desktop-note-widget
+cd desktop-note-widget   # 项目根目录
 # 手动改完版本号后提交
 git add -A && git commit -m "chore: bump version to X.Y.Z"
 git tag -a vX.Y.Z -m "vX.Y.Z"

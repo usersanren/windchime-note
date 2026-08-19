@@ -8,7 +8,7 @@
 |---|---|
 | 名称 | 风铃便签 WindChimeNote |
 | 定位 | Windows 悬挂式桌面便签小组件：绳子从屏幕顶部垂下一张手绘风便签，展示励志短句 |
-| 路径 | `D:\code\WorkBuddyworkspace\260809\desktop-note-widget` |
+| 路径 | 项目根目录 `desktop-note-widget/` |
 | 技术栈 | Tauri v2 + React 18 + TypeScript(strict) + Tailwind 3 + Zustand 5 + Framer Motion 11 + Rust |
 | 版本 | 1.1.0（已建 Git 仓库，tag: v1.0.0 / v1.1.0） |
 | 窗口 | 520×520 透明窗口，可水平拖拽定位、跳过任务栏、鼠标穿透 |
@@ -86,7 +86,7 @@ desktop-note-widget/
 | 时间 | 事项 |
 |---|---|
 | 上午 | **UI 显示不完整修复**：motion.div 挂 `-translate-x-1/2` 被 Framer Motion transform 覆盖 → 居中移外层普通 div；卡片 240→360、窗口 400×600→480×640、字号分级下调 |
-| 15:15-15:30 | **360 主动防御拦截 cargo 构建** → 用户将 `D:\cargo-build-target`、`D:\build-tmp` 加入信任区；vite + debug exe 直跑绕过 |
+| 15:15-15:30 | **本机安全软件拦截 cargo 构建** → 将构建缓存目录 `CARGO_TARGET_DIR`、临时目录 `TMP/TEMP` 重定向到 D 盘并加入信任区；vite + debug exe 直跑绕过 |
 | 16:00-16:40 | **桌面嵌入（WorkerW）**：desktop.rs 实现 SetParent 嵌入，编译恢复 |
 | 16:42-17:12 | 嵌入后便签被拉伸 → SetWindowPos 强制 480×640 + 居中 |
 | 17:15-17:59 | **黑底问题**：WebView2 在 WorkerW 下不支持 alpha → **放弃嵌入方案**（desktop.rs 保留未编译）；改做**「锁定到桌面」**功能（穿透贴纸模式，托盘解锁） |
@@ -187,19 +187,19 @@ npm run dev                      # vite :1420（前端改动实时生效）
 # Rust 改动需重新编译，直接跑 debug 产物：
 D:\cargo-build-target\desktop-note-widget\debug\desktop-note-widget.exe
 ```
-> 360 信任区已配置，正常编译用 `npm run tauri:dev` / `cargo build` 即可；若锁文件报错走上面直跑方案。
+> 正常编译用 `npm run tauri:dev` / `cargo build` 即可（本机若遇安全软件拦截，将缓存目录加入信任区）；若锁文件报错走上面直跑方案。
 > ⚠️ **debug exe 独立运行**（无需 vite）：用脚本 `npm run rebuild:debug`（tauri build --debug 嵌入资源，约 8 分钟）
 
 ### 打包
 ```bash
 # 1. 先删 dist（safe-delete shim 会拦 bash rm，用 PowerShell）
-Remove-Item -Recurse -Force D:\code\WorkBuddyworkspace\260809\desktop-note-widget\dist
+Remove-Item -Recurse -Force dist
 
 # 2. 设置环境变量 + 打包（CARGO_TARGET_DIR 重定向，勿缺）
-cd D:\code\WorkBuddyworkspace\260809\desktop-note-widget
+cd desktop-note-widget
 $env:CARGO_TARGET_DIR = "D:\cargo-build-target\desktop-note-widget"
 $env:TMP = "D:\build-tmp"; $env:TEMP = "D:\build-tmp"
-$env:Path = "C:\Users\Administrator\.cargo\bin;$env:Path"
+$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"
 npm run tauri:build
 ```
 产物：`D:\cargo-build-target\desktop-note-widget\release\bundle\{msi,nsis}\`（release 全量编译约 8 分钟）
@@ -227,8 +227,8 @@ npm run tauri:build
 | 配置类型校验 | `persistence.ts` mergeConfig（asNum/asBool/...守卫） |
 
 ### 环境要点（本机）
-- Rust 1.97.1（rustup + rsproxy.cn 镜像，`~/.cargo/config.toml`）
-- MSVC 非标准路径 `D:\MSVS18\pro`（MSVC 14.50），Windows SDK 10.0.26100
+- Rust stable（rustup，镜像源见 `~/.cargo/config.toml`）
+- MSVC 非标准路径（MSVC 14.50），Windows SDK 10.0.26100
 - 构建必须 `CARGO_TARGET_DIR=D:\cargo-build-target\desktop-note-widget`、`TMP/TEMP=D:\build-tmp`（C 盘仅剩 0.13GB）
 - bash 里 cargo/link 不在 PATH，需导出（见 08-09 日志）
 - `npm install` 首跑可能 bin-links 失败，重跑一次即可
